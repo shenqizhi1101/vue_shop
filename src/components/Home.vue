@@ -1,21 +1,132 @@
 <template>
-    <div>
+  <el-container class="home_container">
+    <el-header>
+      <div>
+        <img src="../assets/heima.png" alt="logo" />
+        <span>电商后台管理系统</span>
+      </div>
       <el-button type="info" @click="loginout">登出</el-button>
-    </div>
+    </el-header>
+    <el-container>
+      <!--侧边栏-->
+      <el-aside :width="iscollapse ? '64px' : '200px'">
+        <div class="toggle_button" @click="toggleCollapse">|||</div>
+        <!--侧边菜单栏区域  一级菜单-->
+        <el-menu background-color="#333744" text-color="#fff" active-text-color="#409EFF" :unique-opened="true" :collapse="iscollapse" :collapse-transition="false" router :default-active="activePath">
+          <el-submenu
+            :index="item.id + ''"
+            v-for="item in menulist"
+            :key="item.id"
+          >
+            <template slot="title">
+              <i :class="iconlist[item.id]"></i>
+              <span>{{ item.authName }}</span>
+            </template>
+            <!-- 二级菜单 -->
+            <el-menu-item
+              :index="'/' + submenu.path"
+              v-for="submenu in item.children"
+              :key="submenu.id"
+            @click="saveNavStale('/' + submenu.path)">
+              <template slot="title">
+                <i class="el-icon-menu"></i>
+                <span>{{ submenu.authName }}</span>
+              </template>
+            </el-menu-item>
+          </el-submenu>
+        </el-menu>
+      </el-aside>
+      <!-- 路由占位符 -->
+      <router-view></router-view>
+    </el-container>
+  </el-container>
 </template>
 
 <script>
-
 export default {
+  data() {
+    return {
+      // 左侧菜单数据
+      menulist: [],
+      iconlist: {
+        125: 'iconfont icon-users',
+        103: 'iconfont icon-tijikongjian',
+        101: 'iconfont icon-shangpin',
+        102: 'iconfont icon-danju',
+        145: 'iconfont icon-baobiao'
+      },
+      // 菜单是否折叠
+      iscollapse: false,
+      // 激活菜单的当前的存储的值
+      activePath: ''
+    }
+  },
+  // 挂载生命周期函数
+  created() {
+    this.getMenuList()
+    this.activePath = window.sessionStorage.getItem('activePath')
+  },
   methods: {
+    // 登出按钮事件
     loginout() {
-      window.sessionStorage.clear("token");
+      window.sessionStorage.clear('token')
       this.$router.push('/login')
+    },
+    // 获取所有菜单数据
+    async getMenuList() {
+      const { data: res } = await this.$http.get('menus')
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.menulist = res.data
+      console.log(this.menulist)
+    },
+    toggleCollapse() {
+      this.iscollapse = !this.iscollapse
+    },
+    saveNavStale(activePath) {
+      window.sessionStorage.setItem('activePath', activePath)
+      this.activePath = activePath
     }
   }
 }
 </script>
-
 <style>
-
+.home_container {
+  height: 100%;
+}
+.el-header {
+  background-color: #373d41;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 0px !important;
+  color: #fff;
+}
+.el-header div {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+}
+.el-header div span {
+  margin-left: 15px;
+}
+.el-aside {
+  background-color: #333744;
+}
+.el-aside .el-menu {
+    border-right: 0;
+}
+.el-main {
+  background-color: #eaedf1;
+}
+.iconfont {
+  margin-right: 7px;
+}
+.toggle_button {
+  background-color: #4a5064;
+  font-size: 10px;
+  line-height: 24px;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.2em;
+}
 </style>
